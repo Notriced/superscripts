@@ -1,0 +1,81 @@
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- Function to create the red box and health display
+local function createESP(player)
+    if player == LocalPlayer then return end -- Skip the local player
+
+    local character = player.Character
+    if not character or not character:FindFirstChild("HumanoidRootPart") then return end
+
+    -- Check if ESP already exists
+    if character:FindFirstChild("ESPBox") then
+        character.ESPBox:Destroy()
+    end
+
+    -- Create BillboardGui
+    local billboardGui = Instance.new("BillboardGui")
+    billboardGui.Name = "ESPBox"
+    billboardGui.Adornee = character.HumanoidRootPart
+    billboardGui.Size = UDim2.new(4, 0, 5, 0)
+    billboardGui.AlwaysOnTop = true
+
+    -- Create Frame for the red box outline
+    local frame = Instance.new("Frame", billboardGui)
+    frame.Size = UDim2.new(1, 0, 1, 0)
+    frame.BackgroundTransparency = 1
+    frame.BorderSizePixel = 2
+    frame.BorderColor3 = Color3.new(1, 0, 0)
+
+    -- Create TextLabel for health display
+    local textLabel = Instance.new("TextLabel", billboardGui)
+    textLabel.Size = UDim2.new(1, 0, 0.2, 0)
+    textLabel.Position = UDim2.new(0, 0, -0.2, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.TextColor3 = Color3.new(1, 1, 1)
+    textLabel.TextScaled = true
+    textLabel.Text = "Health: " .. tostring(character:FindFirstChild("Humanoid").Health)
+
+    billboardGui.Parent = character
+end
+
+-- Function to update ESP
+local function updateESP()
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            local character = player.Character
+            if character and character:FindFirstChild("Humanoid") and character:FindFirstChild("HumanoidRootPart") then
+                local humanoid = character:FindFirstChild("Humanoid")
+                if humanoid and character:FindFirstChild("ESPBox") then
+                    local textLabel = character.ESPBox:FindFirstChild("TextLabel")
+                    if textLabel then
+                        textLabel.Text = "Health: " .. math.floor(humanoid.Health)
+                    end
+                else
+                    createESP(player)
+                end
+            end
+        end
+    end
+end
+
+-- Connect ESP creation for players who join
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function()
+        createESP(player)
+    end)
+end)
+
+-- Initial ESP creation
+for _, player in ipairs(Players:GetPlayers()) do
+    if player.Character then
+        createESP(player)
+    end
+end
+
+-- Update ESP every 5 seconds
+while true do
+    updateESP()
+    wait(5)
+end

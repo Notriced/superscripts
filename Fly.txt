@@ -1,0 +1,51 @@
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+
+local flying = false
+local speed = 50
+local lastSpaceTime = 0
+local debounceTime = 0.3 -- Time interval for double-tap detection
+
+-- Function to toggle flying
+local function toggleFly()
+    flying = not flying
+
+    if flying then
+        print("Flying enabled")
+    else
+        print("Flying disabled")
+    end
+end
+
+-- Function to handle flying motion
+local function onFly()
+    if flying then
+        local character = LocalPlayer.Character
+        if character and character:FindFirstChild("HumanoidRootPart") then
+            local root = character.HumanoidRootPart
+            local camera = workspace.CurrentCamera
+
+            -- Adjust velocity to move the player in the direction of the camera
+            local moveDirection = UserInputService:GetFocusedTextBox() and Vector3.zero or camera.CFrame.LookVector
+            root.Velocity = Vector3.new(moveDirection.X, 0, moveDirection.Z) * speed + Vector3.new(0, 50, 0)
+        end
+    end
+end
+
+-- Detect double-tap space
+UserInputService.InputBegan:Connect(function(input, processed)
+    if processed then return end -- Ignore inputs processed by UI elements
+
+    if input.KeyCode == Enum.KeyCode.Space then
+        local currentTime = tick()
+        if currentTime - lastSpaceTime <= debounceTime then
+            toggleFly()
+        end
+        lastSpaceTime = currentTime
+    end
+end)
+
+-- Keep running the flying logic
+RunService.RenderStepped:Connect(onFly)
